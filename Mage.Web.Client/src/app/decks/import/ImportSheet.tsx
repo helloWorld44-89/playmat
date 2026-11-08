@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Check, ClipboardPaste, ExternalLink, FileUp, Link2, TriangleAlert } from 'lucide-react';
+import { Check, ClipboardPaste, ExternalLink, FileUp, Link2, Trophy, TriangleAlert } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toDeck, type CardIssue, type ImportDraft } from '../../../core/deckImport/draft';
@@ -26,6 +26,8 @@ import { useValidation } from '../useValidation';
 import { APP_NAME } from '../../brand';
 import { SiteMark } from './SiteMark';
 import { PASTE_KEYS } from './text';
+import { TopDecksStep } from './TopDecksStep';
+import { useTopDecksOverview } from './useTopDecks';
 import { cardLookup, useImportFlow, type ImportStep } from './useImportFlow';
 import styles from './ImportSheet.module.css';
 
@@ -61,7 +63,7 @@ export function ImportSheet() {
       title={title}
       width="xl"
       // Esc and the arrow step back to the input before the sheet closes; reading a deck has Cancel instead
-      onBack={step.kind === 'assisted' || step.kind === 'preview' ? backToInput : undefined}
+      onBack={step.kind === 'assisted' || step.kind === 'preview' || step.kind === 'topDecks' ? backToInput : undefined}
     >
       <StepView flow={flow} onDone={close} />
     </Dialog>
@@ -78,6 +80,8 @@ function StepView({ flow, onDone }: { flow: Flow; onDone(): void }) {
       return <LoadingStep site={flow.step.site ? siteById(flow.step.site) : undefined} onCancel={flow.cancel} />;
     case 'assisted':
       return <AssistedStep flow={flow} step={flow.step} />;
+    case 'topDecks':
+      return <TopDecksStep failure={flow.step.failure} onPick={(id) => void flow.pickTopDeck(id)} onBack={flow.backToInput} />;
     case 'preview':
       return <PreviewStep flow={flow} draft={flow.step.draft} onDone={onDone} />;
   }
@@ -88,6 +92,7 @@ function InputStep({ flow, failure }: { flow: Flow; failure?: string }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const { recognized, degraded } = flow;
+  const topDecks = useTopDecksOverview().data?.enabled === true;
   const site = recognized.kind === 'site' ? siteById(recognized.site) : undefined;
   const direct = site && site.tier === 'direct' && !degraded.has(site.id);
 
@@ -180,7 +185,7 @@ function InputStep({ flow, failure }: { flow: Flow; failure?: string }) {
 
       <p className={styles.sitesLegend}>Sites marked <Link2 size={12} aria-hidden="true" className={styles.siteTier} /> read in one step. The others take a copy and a paste.</p>
       <div className={styles.sites} aria-label={`Deck sites ${APP_NAME} reads`}>
-        {DECK_SITES.map((entry) => {
+        {DECK_SITES.filter((entry) => entry.listed !== false).map((entry) => {
           const lit = site?.id === entry.id;
           const oneStep = entry.tier === 'direct' && !degraded.has(entry.id);
           return (
@@ -195,6 +200,7 @@ function InputStep({ flow, failure }: { flow: Flow; failure?: string }) {
 
       <footer className={styles.foot}>
         <Button variant="quiet" icon={<FileUp size={16} />} onClick={() => fileInput.current?.click()}>Choose a file</Button>
+        {topDecks && <Button variant="quiet" icon={<Trophy size={16} />} onClick={flow.browseTopDecks}>Top decks</Button>}
         <input
           ref={fileInput}
           type="file"

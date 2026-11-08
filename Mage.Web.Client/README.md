@@ -62,6 +62,7 @@ shelf, Home, the deck builder's "From a list…" menu, or `/import`:
 - **A link** from Archidekt, TCGplayer, MTGTop8, Scryfall or ManaBox: the server reads the deck (`deckImportFromUrl`).
 - **A link** from Moxfield, MTGGoldfish, AetherHub, TappedOut or Deckstats: these sites block other apps, so the sheet opens the deck on its site, says where its export is, and finishes when the player pastes the list.
 - **A list** in Arena, MTGO, XMage `.dck`, MTGTop8 `.dec` or a site's text export, or a deck file dropped on the shelf.
+- **Top decks**: the sheet's "Top decks" button lists the best finishers (ranks 1 to 8) of recent Magic Online Challenges and Showcases, by format (`topDecksOverview`, `topDecksList`, `topDeckGet`). The server reads mtgo.com once a day and answers from its saved copy, so the list is a day old at most. Picking a deck goes to the same preview as any import. These decks remember their source (shown as "Magic Online", linked to the event page) but have no "Update from…": a top deck is a snapshot, not a page to read again. The button hides when the server has the feature off (`XMAGE_TOP_DECKS=off`) or is too old to have it.
 - **"Send to Playmat"**, a bookmarklet from Settings → Import: on a deck page it reads the deck in the player's own browser and opens `/import#deck=…`. The deck travels in the URL fragment, which no server sees.
 
 ⌘V / Ctrl+V anywhere on Decks, Home or the builder (outside a text field) opens the sheet with whatever is on the

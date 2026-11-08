@@ -11,6 +11,7 @@ import { scryfallRenamedCard } from '../../../core/deckImport/scryfallNames';
 import { configuredImageProxy, proxiedScryfallUrl } from '../../../core/images/imageProxy';
 import { nameFromLink, siteById, type DeckSiteId } from '../../../core/deckImport/sites';
 import type { CardView } from '../../../protocol/generated/views';
+import { RpcError } from '../../../core/rpc/RpcClient';
 import { APP_NAME } from '../../brand';
 import { api } from '../../connection';
 import type { ImportSeed } from '../../stores/importSheet';
@@ -29,6 +30,7 @@ export type ImportStep =
   | { kind: 'input'; failure?: string }
   | { kind: 'loading'; site?: DeckSiteId }
   | { kind: 'assisted'; site: DeckSiteId; url: string; remoteId: string; failure?: ImportFailure }
+  | { kind: 'topDecks'; failure?: string }
   | { kind: 'preview'; draft: ImportDraft };
 
 /** Which direct sites the server can read right now (a degraded one goes to the copy-and-paste flow). */
@@ -119,6 +121,33 @@ export function useImportFlow() {
     return true;
   }, [step, draftFrom]);
 
+  /** The server's list of recent Magic Online top decks. */
+  const browseTopDecks = useCallback(() => {
+    run.current += 1;
+    setStep({ kind: 'topDecks' });
+  }, []);
+
+  /** A listed top deck: fetch its cards and go on to the same preview as any import. */
+  const pickTopDeck = useCallback(async (id: string) => {
+    const ticket = ++run.current;
+    setStep({ kind: 'loading', site: 'mtgo' });
+    let reading: DeckReading;
+    try {
+      const deck = await api.topDeckGet(id);
+      reading = readingFromServer(deck, 'mtgo', deck.url ?? '');
+    } catch (error) {
+      if (ticket !== run.current) return;
+      const gone = error instanceof RpcError && (error.data as { reason?: string } | undefined)?.reason === 'not_found';
+      setStep({
+        kind: 'topDecks',
+        failure: gone ? 'That list has been refreshed since you opened it. Pick again.' : 'Couldn’t load that deck. Try again in a moment.',
+      });
+      return;
+    }
+    if (ticket !== run.current) return;
+    await draftFrom(reading, 'Magic Online deck');
+  }, [draftFrom]);
+
   /** Start from what the sheet was opened with. */
   const seed = useCallback((value: ImportSeed | null) => {
     run.current += 1;
@@ -187,7 +216,7 @@ export function useImportFlow() {
 
   return {
     text, setText, step, recognized, degraded,
-    submit, seed, cancel, backToInput, finishAssisted, updateDraft, pick, skip, setPrintings,
+    submit, seed, cancel, backToInput, browseTopDecks, pickTopDeck, finishAssisted, updateDraft, pick, skip, setPrintings,
     issues: step.kind === 'preview' ? issuesOf(step.draft) : [],
   };
 }

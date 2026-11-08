@@ -61,7 +61,7 @@ export function DecksScreen() {
 
   const source = selected?.source;
   const sourceSite = siteById(source?.site);
-  const updatable = !!sourceSite && sourceSite.tier === 'direct' && !degraded.has(sourceSite.id);
+  const updatable = !!sourceSite && sourceSite.tier === 'direct' && sourceSite.updatable !== false && !degraded.has(sourceSite.id);
 
   async function duplicate(deck: RosterDeck) {
     try {

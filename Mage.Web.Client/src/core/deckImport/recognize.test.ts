@@ -98,3 +98,9 @@ describe('nameFromLink', () => {
     expect(nameFromLink('https://www.mtggoldfish.com/deck/6512345')).toBeUndefined();
   });
 });
+
+describe('recognize: Magic Online top decks', () => {
+  it('is not a site to paste links from', () => {
+    expect(recognize('https://www.mtgo.com/decklist/legacy-challenge-16-2026-11-0412857730').kind).toBe('unknownUrl');
+  });
+});

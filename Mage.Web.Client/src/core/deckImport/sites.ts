@@ -9,7 +9,8 @@
 
 export type DeckSiteId =
   | 'archidekt' | 'tcgplayer' | 'mtgtop8' | 'scryfall' | 'manabox'
-  | 'moxfield' | 'mtggoldfish' | 'aetherhub' | 'tappedout' | 'deckstats';
+  | 'moxfield' | 'mtggoldfish' | 'aetherhub' | 'tappedout' | 'deckstats'
+  | 'mtgo';
 
 export type DeckSiteTier = 'direct' | 'assisted';
 
@@ -28,6 +29,10 @@ export interface DeckSite {
   exportUrl?(deckUrl: URL, id: string): string;
   /** one sentence, in the site's own words, on getting the list out */
   exportHint: string;
+  /** false for a source that isn't a site to paste links from, so the import sheet doesn't list it */
+  listed?: boolean;
+  /** false when a saved deck can't be read again from its link (a snapshot, not a page) */
+  updatable?: boolean;
 }
 
 const segment = (url: URL, pattern: RegExp) => pattern.exec(url.pathname)?.[1] ?? null;
@@ -130,6 +135,18 @@ export const DECK_SITES: DeckSite[] = [
     },
     exportUrl: (url) => `https://deckstats.net${url.pathname.replace(/\/[a-z]{2}\/?$/, '')}?export_mtgarena=1&include_comments=0`,
     exportHint: 'The Arena export opens as plain text: select it all and copy.',
+  },
+  {
+    // the server's daily copy of recent Magic Online top decks (the "Top decks" step), not a site to paste links from
+    id: 'mtgo',
+    name: 'Magic Online',
+    monogram: 'Mo',
+    tier: 'direct',
+    hosts: [],
+    deckId: () => null,
+    exportHint: '',
+    listed: false,
+    updatable: false,
   },
 ];
 
