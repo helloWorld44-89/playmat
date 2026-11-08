@@ -173,6 +173,17 @@ IMGCACHE_FALLBACK=on                                     <span class="c"># Scryf
           <code>up -d</code>. It only plays one-on-one games whose decks it knows every card of (the Pioneer and
           Standard Career decks and a few more for now; the server log names the cards it's missing). <code>XMAGE_ENGINE=java</code> turns it off again. Details are in
           <a href="https://github.com/arcanite24/playmat/blob/master/ops/web/README.md#rust-ai">the README</a>.</p>
+        <h3 id="top-decks">What does the server fetch for the &ldquo;top decks&rdquo; list?</h3>
+        <p>Players can import a recent top-8 deck from a Magic Online Challenge or Showcase, for Standard, Pioneer,
+          Modern, Legacy, Vintage and Pauper. The server reads the public results at
+          <code>www.mtgo.com/decklists</code> once a day (about 20 pages, a second or so apart), keeps the result in
+          <code>db/topdecks.json</code> on the <code>xmage-db</code> volume and serves players from that copy. A
+          restart doesn&rsquo;t read the site again, and if the site is down the old list stays. If the server sits
+          behind a firewall or proxy, let it reach <code>www.mtgo.com</code> on port 443. Set
+          <code>XMAGE_TOP_DECKS=off</code> in <code>.env</code> and run <code>up -d</code> to stop the daily read and
+          hide the list. Every deck links back to its page on mtgo.com, which is Daybreak Game Company&rsquo;s.
+          <a href="https://github.com/arcanite24/playmat/blob/master/ops/web/README.md">The README</a> lists the
+          setting.</p>
         <h3 id="desktop">Can the XMage desktop client connect?</h3>
         <p>No. Playmat servers speak only to the web client (and the Android and desktop apps, which are the web client).
           The desktop client's protocol was removed to make the move to Rust possible.</p>

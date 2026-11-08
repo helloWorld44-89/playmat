@@ -293,6 +293,9 @@ args=$(mktemp /tmp/xmage-jvm.XXXXXX)
   echo "-Dlog4j.configuration=file:$APP/config/log4j-docker.properties"
   echo "-Dxmage.replays=$REPLAYS"
   echo "-Dxmage.remoting=false"
+  # the daily copy of Magic Online's top decks lives with the user data (the xmage-db volume); XMAGE_TOP_DECKS=off stops the daily read
+  echo "-Dxmage.web.topDecks.file=$APP/db/topdecks.json"
+  [ "${XMAGE_TOP_DECKS:-on}" != off ] || echo "-Dxmage.web.topDecks=false"
   # with the gateway on, the server keeps its card catalog current (it rewrites it when its cards change)
   if [ "$GATEWAY" = on ]; then
     echo "-Dxmage.catalog.export=$CARDS_DIR/catalog.sqlite"

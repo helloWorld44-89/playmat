@@ -2216,6 +2216,35 @@ export interface TimedTwist extends Serializable {
     who?: string;
 }
 
+export interface TopDeckFormat {
+    decks?: number;
+    id?: string;
+    name?: string;
+}
+
+export interface TopDeckSummary {
+    cards?: number;
+    colours?: string;
+    date?: string;
+    event?: string;
+    eventUrl?: string;
+    format?: string;
+    id?: string;
+    losses?: number;
+    player?: string;
+    rank?: number;
+    wins?: number;
+}
+
+export interface TopDecksOverview {
+    enabled?: boolean;
+    formats?: TopDeckFormat[];
+    refreshing?: boolean;
+    sourceName?: string;
+    sourceUrl?: string;
+    updatedAt?: number;
+}
+
 export interface TournamentGameView extends Serializable {
     gameId?: string;
     matchId?: string;

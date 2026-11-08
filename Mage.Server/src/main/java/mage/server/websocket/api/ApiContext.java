@@ -6,6 +6,7 @@ import mage.server.websocket.rpc.RpcSessions;
 import mage.server.websocket.service.CardSearchService;
 import mage.server.websocket.service.DeckValidationService;
 import mage.server.websocket.service.deckimport.DeckImportService;
+import mage.server.websocket.service.deckimport.TopDecksService;
 
 import java.util.Optional;
 import java.util.function.Function;
@@ -21,6 +22,7 @@ public final class ApiContext {
     final CardSearchService cardSearch = new CardSearchService();
     final DeckValidationService deckValidation = new DeckValidationService();
     final DeckImportService deckImport = new DeckImportService();
+    final TopDecksService topDecks = new TopDecksService();
     final LoginThrottle adminLoginThrottle = new LoginThrottle();
     /** player sign-ins with a password, per address and per account name */
     final LoginThrottle playerLoginThrottle = LoginThrottle.forPlayers();

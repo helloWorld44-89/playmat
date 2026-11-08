@@ -166,6 +166,9 @@ Generated from the server's method registry (`mage.server.websocket.api`). Do no
 | `deckValidate` | `deckType: string`, `deck: DeckCardLists` | `DeckValidationResult` | session | Check a deck against a format, with EDH power level and Commander brackets. |
 | `deckImportFromUrl` | `url: string` | `ImportedDeck` | session | Read the deck behind a deck website link. Ten imports a minute per session; results are cached for five minutes. Fails with code -32005 and data {reason}: private, not_found, blocked, rate_limited, site_changed, unsupported, too_large, timeout or unavailable. |
 | `deckImportSources` | - | `DeckSourceStatus[]` | public | Deck websites the server imports from by link, and whether each works right now (ok or degraded). |
+| `topDecksOverview` | - | `TopDecksOverview` | session | The formats that list top decks (the best finishers of recent Magic Online Challenges and Showcases), how many decks each has, and when the list was last read from mtgo.com. The server reads mtgo.com at most once a day and answers from its saved copy; enabled is false when the host switched the feature off. |
+| `topDecksList` | `format: string` | `TopDeckSummary[]` | session | The listed top decks of one format (standard, pioneer, modern, legacy, vintage or pauper): newest event first, best finisher first. Fails with -32005 and reason unsupported for any other format. |
+| `topDeckGet` | `id: string` | `ImportedDeck` | session | The full deck behind a listed top deck id, in the same shape as deckImportFromUrl, for the import preview. Fails with -32005 and reason not_found when the list has moved on since the id was listed. |
 | `roomGetUsers` | `roomId: UUID` | `RoomUsersView[]` | session | Users and server statistics of a room. |
 | `roomGetAllTables` | `roomId: UUID` | `TableView[]` | session | All open and running tables of a room. |
 | `roomGetTableById` | `roomId: UUID`, `tableId: UUID` | `TableView \| null` | session | One table of a room. |
@@ -495,6 +498,29 @@ Failures come back as error `-32005` with `data: {"reason": ...}`:
 | `unavailable` | The site is down or unreachable. |
 
 Recorded responses from every site live in `Mage.Server/src/test/resources/deckimport` and back the unit tests.
+
+### Top decks
+
+`topDecksOverview()`, `topDecksList(format)` and `topDeckGet(id)` list the best finishers (final ranks 1 to 8) of recent
+Magic Online Challenges and Showcases, from mtgo.com/decklists, so a player can import one without a link.
+`topDeckGet` returns the same `ImportedDeck` as `deckImportFromUrl` (card names only, no set codes, since MTGO's set
+codes don't always match XMage's), so the client's matching and preview are unchanged. Formats: `standard`, `pioneer`,
+`modern`, `legacy`, `vintage`, `pauper`. Leagues and Duel Commander aren't listed.
+
+- Read only, and the server reads mtgo.com **at most once a day**: the result is a snapshot in memory and in
+  `db/topdecks.json`, so a restart doesn't read the site again. A request that finds the snapshot a day old starts one refresh
+  in the background and is answered from the old snapshot meanwhile (`refreshing` is true). A refresh reads the index page and
+  the three newest finished events of each format, about 1.5 seconds apart, through the same fetcher as deck import (https,
+  GET only, no cookies, `www.mtgo.com` only). If it fails, the old snapshot stays and the next try waits an hour.
+- Ids are `{format}-{event id}-{rank}` and only last while the event is in the snapshot: `topDeckGet` fails with reason
+  `not_found` once the list has moved on, and the client should reload the list.
+- `-Dxmage.web.topDecks=false` (`XMAGE_TOP_DECKS=off` in the Docker stack) switches the feature off: `enabled` is false and
+  the list calls fail with `unsupported`.
+- Results include the player names mtgo.com shows. The log keeps counts and failure reasons only.
+- Every deck points back to its event page on mtgo.com (`ImportedDeck.url`); the client should show that link. The pages are
+  Daybreak Game Company's.
+- Failures use the same error `-32005` and reasons as deck import. These calls are answered by Java only
+  (`XMAGE_ROUTE_DECKIMPORT` doesn't move them).
 To find out whether a site changed, run the live canary weekly (it imports one known public deck per site over
 the network, and is skipped in normal builds):
 

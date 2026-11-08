@@ -77,6 +77,12 @@ export function createApi(rpc: RpcCaller) {
       rpc.call('deckImportFromUrl', url),
     deckImportSources: () =>
       rpc.call('deckImportSources'),
+    topDecksOverview: () =>
+      rpc.call('topDecksOverview'),
+    topDecksList: (format: string) =>
+      rpc.call('topDecksList', format),
+    topDeckGet: (id: string) =>
+      rpc.call('topDeckGet', id),
     roomGetUsers: (roomId: UUID) =>
       rpc.call('roomGetUsers', roomId),
     roomGetAllTables: (roomId: UUID) =>

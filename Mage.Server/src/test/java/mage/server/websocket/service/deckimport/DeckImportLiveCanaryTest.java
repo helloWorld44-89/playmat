@@ -9,6 +9,7 @@ import org.junit.Test;
  * that changes its pages or API shows up here before players hit it. Not part of the normal build (it needs
  * the network and real sites); run it weekly:
  * <pre>mvn -pl Mage.Server test -Dtest=DeckImportLiveCanaryTest -Dxmage.deckImportCanary=true</pre>
+ * The top decks check reads mtgo.com/decklists once, as the server's daily refresh does (about 20 pages, 1.5 seconds apart).
  */
 public class DeckImportLiveCanaryTest {
 
@@ -36,5 +37,35 @@ public class DeckImportLiveCanaryTest {
             }
         }
         Assert.assertEquals("deck sites that no longer import:\n" + broken, "", broken.toString());
+    }
+
+    @Test
+    public void mtgoTopDecksStillRead() throws Exception {
+        Assume.assumeTrue("live canary: run with -Dxmage.deckImportCanary=true", Boolean.getBoolean("xmage.deckImportCanary"));
+        java.nio.file.Path file = java.nio.file.Files.createTempDirectory("topdecks").resolve("topdecks.json");
+        try {
+            TopDecksService service = new TopDecksService(null, System::currentTimeMillis, Runnable::run,
+                    millis -> {
+                        try {
+                            Thread.sleep(millis);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }, file, true);
+            service.overview();
+            int formats = 0;
+            for (String format : new String[]{"standard", "pioneer", "modern", "legacy", "vintage", "pauper"}) {
+                java.util.List<TopDecksService.TopDeckSummary> decks = service.decks(format);
+                if (!decks.isEmpty()) {
+                    formats++;
+                    ImportedDeck deck = service.deck(decks.get(0).getId());
+                    Assert.assertTrue(format + " deck has " + deck.cardCount() + " cards", deck.cardCount() >= 40);
+                }
+            }
+            Assert.assertTrue("formats with top decks: " + formats, formats >= 4);
+        } finally {
+            java.nio.file.Files.deleteIfExists(file);
+            java.nio.file.Files.deleteIfExists(file.getParent());
+        }
     }
 }

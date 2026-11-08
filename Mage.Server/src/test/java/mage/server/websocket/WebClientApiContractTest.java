@@ -49,6 +49,7 @@ public class WebClientApiContractTest {
             "disconnectSession", "playerLogout", "sessionGetRestoreToken", "sessionUserName", // session manager
             "getExpansionSets", "getBasicLandSets", "searchCards", "lookupCards", "deckValidate", // card database services
             "deckImportFromUrl", "deckImportSources", // deck website import service
+            "topDecksOverview", "topDecksList", "topDeckGet", // Magic Online top decks service
             "testEndGame", "testConcedeMatch", // test mode helpers on table manager
             "gameResync", // the bridge resends its own copy of the open question
             "setCapabilities", "gameStateResync", // bridge protocol options and game state patches

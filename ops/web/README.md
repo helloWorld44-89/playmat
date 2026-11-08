@@ -171,6 +171,7 @@ Set these in `ops/web/.env` (Compose reads it automatically) or in the environme
 | `XMAGE_MAX_SECONDS_IDLE` | `600` (shipped) | `maxSecondsIdle`: an idle player concedes after this many seconds. |
 | `XMAGE_SERVER_NAME` | `mage-server` | `serverName`. |
 | `XMAGE_MONTE_CARLO` | `true` | `false` takes the Monte Carlo AI off the server (and out of the web client's AI choices). It keeps every core busy for its whole think time. |
+| `XMAGE_TOP_DECKS` | `on` | The deck import's "top decks" list: the best finishers of recent Magic Online Challenges and Showcases. The server reads mtgo.com/decklists once a day (about 20 pages, a second or so apart), keeps the result in `db/topdecks.json` and serves players from it. `off` stops the daily read and hides the list (`-Dxmage.web.topDecks=false`). Firewalled servers need to reach `www.mtgo.com` on port 443. |
 | `XMAGE_AI_THREADS` | `5`, or the CPUs when fewer | AI searches running at once for all AI players (`-Dxmage.ai.threads`). A search waiting for a thread doesn't lose think time. |
 | `XMAGE_AI_NODE_SCALE` | `1` | Scales every AI skill's search budget (`-Dxmage.ai.nodeScale`), e.g. `0.5` on a slow server: faster turns, slightly weaker play. |
 | `XMAGE_DB_CACHE` | an eighth of the heap, 16–150 MB | Card database cache in MB (`-Dxmage.db.cacheSizeKB`). It lives in the heap. |
